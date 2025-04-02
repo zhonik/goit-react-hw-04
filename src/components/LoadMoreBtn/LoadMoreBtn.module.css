@@ -1,0 +1,18 @@
+.loadMoreBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 150px;
+  padding: 8px;
+  border: none;
+  border-radius: 12px;
+  outline: none;
+  background-color: teal;
+  color: #ffffff;
+
+  font-family: var(--font-family);
+  font-weight: 500;
+  &:hover {
+    background-color: #015a62;
+  }
+}
