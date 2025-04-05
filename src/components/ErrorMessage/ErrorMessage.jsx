@@ -1,10 +1,10 @@
 import css from './ErrorMessage.module.css';
 
-const ErrorMessage = ({ errorStatus }) => {
+const ErrorMessage = () => {
   return (
     <div className={css.error}>
       Whoops, something went wrong! <br />
-      Please try reloading this page!
+      Please try again your request!
     </div>
   );
 };

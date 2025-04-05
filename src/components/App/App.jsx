@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import SearchBar from '../SearchBar/SearchBar';
 import css from './App.module.css';
 import ImageGallery from '../ImageGallery/ImageGallery';
@@ -6,80 +6,75 @@ import Loader from '../Loader/Loader';
 import ErrorMessage from '../ErrorMessage/ErrorMessage';
 import LoadMoreBtn from '../LoadMoreBtn/LoadMoreBtn';
 import ImageModal from '../ImageModal/ImageModal';
-import { fetchPhotosWithQuery, instance } from '../../photos-api';
+import { getPhotos } from '../../photos-api';
 
 const App = () => {
   const [photos, setPhotos] = useState([]);
-  const [value, setValue] = useState('');
+  const [query, setQuery] = useState('');
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
   const [loadbtn, setLoadbtn] = useState(false);
-  const [error, setError] = useState(false);
+  const [error, setError] = useState(null);
+  const [modalIsOpen, setModalIsOpen] = useState(false);
   const [modalImg, setModalImg] = useState({
     alt: '',
     src: '',
-    isOpen: false,
   });
 
-  const handleSearch = async query => {
-    setValue(query);
-    setPage(1);
-    setPhotos([]);
-    setLoading(true);
-    setError(false);
+  useEffect(() => {
+    if (!query) return;
+    const fetchPhotos = async () => {
+      setLoading(true);
 
-    try {
-      setLoadbtn(false);
-      const data = await fetchPhotosWithQuery(query);
-      setPhotos(data);
-    } catch (error) {
-      setError(true);
-      console.error(error);
-    } finally {
-      setLoading(false);
-      setLoadbtn(true);
-    }
-  };
-
-  const handleLoadMoreBtnClick = async () => {
-    const nextPage = page + 1;
-    setPage(nextPage);
-
-    try {
-      const data = await fetchPhotosWithQuery(value, nextPage);
-      setPhotos(prevPhotos => [...prevPhotos, ...data]);
-    } catch (error) {
-      setError(true);
-      console.error(error);
-    } finally {
-      setLoading(false);
-      if (page === instance.defaults.params.total_pages) {
+      try {
         setLoadbtn(false);
+        const { results, total_pages } = await getPhotos(query, page);
+        setPhotos(prevPhoto => [...prevPhoto, ...results]);
+        setLoadbtn(page < total_pages);
+      } catch (error) {
+        setError(error);
+        console.error(error);
+      } finally {
+        setLoading(false);
       }
-    }
+    };
+    fetchPhotos();
+  }, [page, query]);
+
+  const onHandleSubmit = value => {
+    setQuery(value);
+    setPhotos([]);
+    setPage(1);
+    setError(null);
+    setLoadbtn(false);
   };
 
-  const handleImageClick = img => {
+  const onLoadMore = () => {
+    setPage(prevPage => prevPage + 1);
+  };
+
+  const openModal = img => {
+    setModalIsOpen(true);
     setModalImg(img);
   };
 
-  const handleModalClick = () => {
+  const closeModal = () => {
+    setModalIsOpen(false);
     setModalImg({
       alt: '',
       src: '',
-      isOpen: false,
     });
   };
 
   return (
     <div>
-      <SearchBar onSubmit={handleSearch} />
+      <SearchBar onSubmit={onHandleSubmit} />
       <div className={css.container}>
-        {photos.length > 0 && <ImageGallery images={photos} openModal={handleImageClick} />}
+        {photos.length > 0 && <ImageGallery images={photos} openModal={openModal} />}
         {error && <ErrorMessage />}
         <Loader loading={loading} />
-        {loadbtn && <LoadMoreBtn onClick={handleLoadMoreBtnClick} />}
-        <ImageModal {...modalImg} onClick={handleModalClick} />
+        {loadbtn && <LoadMoreBtn onClick={onLoadMore} />}
+        <ImageModal {...modalImg} closeModal={closeModal} modalIsOpen={modalIsOpen} />
       </div>
     </div>
   );

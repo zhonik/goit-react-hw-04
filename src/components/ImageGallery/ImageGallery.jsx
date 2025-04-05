@@ -5,14 +5,8 @@ const ImageGallery = ({ images, openModal }) => {
   return (
     <ul className={css.galleryList}>
       {images.map(image => (
-        <li
-          key={image.id}
-          className={css.galleryItem}
-          onClick={() =>
-            openModal({ alt: image.alt_description, src: image.urls.regular, isOpen: true })
-          }
-        >
-          <ImageCard image={image} />
+        <li key={image.id} className={css.galleryItem}>
+          <ImageCard image={image} openModal={openModal} />
         </li>
       ))}
     </ul>
